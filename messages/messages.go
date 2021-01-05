@@ -1,7 +1,7 @@
 package messages
 
 import (
-	echo "github.com/labstack/echo/v4"
+	echo "github.com/labstack/echo"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"gopkg.in/go-playground/validator.v9"
 )
