@@ -53,8 +53,9 @@ func setUpManager() *Manager {
 
 	maxLife, err := strconv.ParseInt(os.Getenv("DB_CONN_MAX_LIFETIME"), 10, 64)
 	if err != nil {
-		maxLife = defaultConnMaxLifetime
+		panic(err)
 	}
+	maxLife = defaultConnMaxLifetime
 	var maxIdleConn int
 	var maxOpenConn int
 
@@ -80,7 +81,7 @@ func setUpManager() *Manager {
 
 	return &Manager{
 		Driver:          driver,
-		ConnMaxLifetime: time.Duration(maxLife),
+		ConnMaxLifetime: time.Second * time.Duration(maxLife),
 		MaxIdleConns:    maxIdleConn,
 		MaxOpenConns:    maxOpenConn,
 	}
