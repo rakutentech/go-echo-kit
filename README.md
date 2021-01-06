@@ -1,6 +1,6 @@
 # Go-Echo-Kit
 
-[![CircleCI](https://circleci.com/gh/rakutentech/go-echo-kit/tree/master.svg?style=svg)](https://circleci.com/gh/rakutentech/go-echo-kit/tree/master)
+![Build](https://github.com/rakutentech/go-echo-kit/workflows/.github/workflows/go.yml/badge.svg)
 
 ## Overview
 Go Echo Kit provides useful tools for go-echo development.
