@@ -1,6 +1,6 @@
 # Go-Echo-Kit
 
-![Build](https://github.com/rakutentech/go-echo-kit/workflows/.github/workflows/go.yml/badge.svg)
+![Build](https://github.com/rakutentech/go-echo-kit/workflows/go-echo-kit/badge.svg)
 
 ## Overview
 Go Echo Kit provides useful tools for go-echo development.
