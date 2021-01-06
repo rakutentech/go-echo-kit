@@ -1,6 +1,6 @@
 # Go-Echo-Kit
 
-[![CircleCI](https://circleci.com/gh/rakutentech/go-echo-kit/tree/master.svg?style=svg)](https://circleci.com/gh/rakutentech/go-echo-kit/tree/master)
+![Build](https://github.com/rakutentech/go-echo-kit/workflows/go-echo-kit/badge.svg)
 
 ## Overview
 Go Echo Kit provides useful tools for go-echo development.
@@ -67,7 +67,7 @@ Check testdata/config.yaml to get more details
 | Variable name        | Description                                | Default     |
 | -----------          | -----------                                | ----------- |
 | DB_DRIVER            | Db drivers which Gorm supports             | mysql       |
-| DB_CONN_MAX_LIFETIME | Maximum connection life time(nano seconds) | unlimited   |
+| DB_CONN_MAX_LIFETIME | Maximum connection life time(seconds)      | unlimited   |
 | DB_MAX_IDLE_CONNS    | Maximum number of idle connection          | 2           |
 | DB_MAX_OPEN_CONNS    | Maximum number of open connection          | unlimited   |
 
