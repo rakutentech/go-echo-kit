@@ -16,16 +16,16 @@ import (
 )
 
 var onceMultiDb sync.Once
-var singletonDB *gorm.DB
+var SingletonDB *gorm.DB
 
-type multiDbConf[] struct {
+type multiDbConf struct {
 	Master string // master db dsn
 	Slave  []string // slave db dsn
 	Name   string // db name
 }
 
 // return singleton DB
-func ConnDB(conf multiDbConf) *gorm.DB {
+func ConnDB(conf[] multiDbConf) *gorm.DB {
 	if len(conf) == 0 {
 		logger.LogCritf("[Fatal Error]can not connect to DB: empty dsn given")
 	}
@@ -92,8 +92,8 @@ func ConnDB(conf multiDbConf) *gorm.DB {
 		if err != nil {
 			logger.LogCritf("[Fatal Error]can not connect to DB: %v", err)
 		}
-		singletonDB = DB
+		SingletonDB = DB
 	})
 
-	return singletonDB
+	return SingletonDB
 }
