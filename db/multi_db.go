@@ -15,16 +15,16 @@ import (
 )
 
 var onceMultiDb sync.Once
-var SingletonDB *gorm.DB
+var Connection *gorm.DB
 
-type multiDbConf struct {
-	Master string // master db dsn
-	Slaves  []string // slave db dsn
-	Name   string // db name
+type MultiDbConf struct {
+	Master  string // master db dsn
+	Slaves  []string // slave db dsn array
+	DbName  string // db name
 }
 
 // connect to multiple DB sources (mysql only)
-func ConnDB(conf[] multiDbConf) *gorm.DB {
+func ConnMultiDB(conf[] MultiDbConf) *gorm.DB {
 	if len(conf) == 0 {
 		logger.LogCritf("[Fatal Error]can not connect to DB: empty dsn given")
 	}
@@ -51,7 +51,7 @@ func ConnDB(conf[] multiDbConf) *gorm.DB {
 
 		/** default DB connection **/
 		defaultMaster := conf[0].Master
-		defaultDbName := conf[0].Name
+		defaultDbName := conf[0].DbName
 		DB, err := gorm.Open(mysql.Open(defaultMaster), gormConfig)
 
 		if err != nil {
@@ -82,7 +82,7 @@ func ConnDB(conf[] multiDbConf) *gorm.DB {
 			dbResolver.Register(dbresolver.Config{
 				Sources:  []gorm.Dialector{mysql.Open(c.Master)},
 				Replicas: dialector,
-			}, c.Name)
+			}, c.DbName)
 		}
 
 		err = DB.Use(dbResolver)
@@ -90,8 +90,21 @@ func ConnDB(conf[] multiDbConf) *gorm.DB {
 		if err != nil {
 			logger.LogCritf("[Fatal Error]can not connect to DB: %v", err)
 		}
-		SingletonDB = DB
+		Connection = DB
 	})
 
-	return SingletonDB
+	return Connection
+}
+
+// close database connection
+func CloseMultiDB(dbConn *gorm.DB) {
+	gormDB, err := dbConn.DB()
+	if err != nil {
+		logger.LogErrorf("[Error]can not get DB: %v", err)
+	}
+
+	err = gormDB.Close()
+	if err != nil {
+		logger.LogErrorf("[Error]can not close DB: %v", err)
+	}
 }
