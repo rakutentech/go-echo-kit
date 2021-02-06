@@ -1,7 +1,6 @@
 package db
 
 import (
-	"github.com/rakutentech/go-echo-kit/config"
 	"github.com/rakutentech/go-echo-kit/logger"
 
 	"gorm.io/driver/mysql"
@@ -31,13 +30,12 @@ func ConnDB(conf[] multiDbConf) *gorm.DB {
 	}
 
 	onceMultiDb.Do(func() {
-		cfg := config.New()
-		env := cfg.GetString("app.env")
+		enableSqlLog := os.Getenv("SQL_LOGGER_ENABLED")
 
 		gormConfig := &gorm.Config{}
 
 		// print Slow SQL and happening errors
-		if env != "prod" && env != "pre" {
+		if enableSqlLog == "true" {
 			sqlLogger := gormlogger.New(
 				log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 				gormlogger.Config{
