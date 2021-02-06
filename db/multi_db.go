@@ -23,7 +23,7 @@ type multiDbConf struct {
 	Name   string // db name
 }
 
-// return singleton DB
+// connect to multiple DB sources (mysql only)
 func ConnDB(conf[] multiDbConf) *gorm.DB {
 	if len(conf) == 0 {
 		logger.LogCritf("[Fatal Error]can not connect to DB: empty dsn given")
