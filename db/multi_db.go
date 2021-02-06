@@ -20,7 +20,7 @@ var SingletonDB *gorm.DB
 
 type multiDbConf struct {
 	Master string // master db dsn
-	Slave  []string // slave db dsn
+	Slaves  []string // slave db dsn
 	Name   string // db name
 }
 
@@ -61,7 +61,7 @@ func ConnDB(conf[] multiDbConf) *gorm.DB {
 		}
 
 		var defaultDialector []gorm.Dialector
-		for _, defaultSlave := range conf[0].Slave {
+		for _, defaultSlave := range conf[0].Slaves {
 			defaultDialector = append(defaultDialector, mysql.Open(defaultSlave))
 		}
 		dbResolver := dbresolver.Register(dbresolver.Config{
@@ -77,7 +77,7 @@ func ConnDB(conf[] multiDbConf) *gorm.DB {
 			}
 
 			var dialector []gorm.Dialector
-			for _, slave := range c.Slave {
+			for _, slave := range c.Slaves {
 				dialector = append(dialector, mysql.Open(slave))
 			}
 
