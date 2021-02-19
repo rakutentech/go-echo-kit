@@ -108,3 +108,11 @@ func CloseMultiDB(dbConn *gorm.DB) {
 		logger.LogErrorf("[Error]can not close DB: %v", err)
 	}
 }
+
+func GetInstance(connectionName string, isMaster bool) *gorm.DB {
+	if isMaster {
+		return Connection.Clauses(dbresolver.Use(connectionName), dbresolver.Write)
+	} else {
+		return Connection.Clauses(dbresolver.Use(connectionName), dbresolver.Read)
+	}
+}

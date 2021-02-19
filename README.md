@@ -97,7 +97,7 @@ defer db.CloseMultiDB(dbConn)
 import "github.com/rakutentech/go-echo-kit/db"
 import "gorm.io/plugin/dbresolver"
 
-query := db.Connection.Clauses(dbresolver.Use("db1"), dbresolver.Read).
+query := db.GetInstance("connection-name", true).
 		Select("user_id, name, email, created_at").
 		Table("user").
 		Limit(2)
