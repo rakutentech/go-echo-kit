@@ -78,26 +78,25 @@ import "github.com/rakutentech/go-echo-kit/db"
 var dbConfig[] db.MultiDbConf
 
 db1Config := db.MultiDbConf {
-    Master: db1MasterDsn, // master DB connection string
-    Slaves: db1SlaveDsn, // salve DB connection strings
+    Master: db1MasterDsn, // master db1 connection string
+    Slaves: db1SlaveDsns, // salve db1 connection strings
     DbName: "db1",
 }
 db2Config := db.MultiDbConf {
-    Master: db2MasterDsn,
-    Slaves: db2SlaveDsn,
+    Master: db2MasterDsn, // master db2 connection string
+    Slaves: db2SlaveDsns, // slave db2 connection strings
     DbName: "db2",
 }
 
 dbConfig = append(dbConfig, db1Config, db2Config)
-dbConn = db.ConnMultiDB(dbConfig)
+dbConn = db.OpenDBConn(dbConfig)
 
-defer db.CloseMultiDB(dbConn)
+defer db.CloseDBConn(dbConn)
 ```
 ```go
 import "github.com/rakutentech/go-echo-kit/db"
-import "gorm.io/plugin/dbresolver"
 
-query := db.GetInstance("connection-name", true).
+query := db.GetInstance("db1", false).
 		Select("user_id, name, email, created_at").
 		Table("user").
 		Limit(2)

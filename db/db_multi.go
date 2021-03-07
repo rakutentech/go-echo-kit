@@ -14,8 +14,8 @@ import (
 	"time"
 )
 
-var onceMultiDb sync.Once
-var Connection *gorm.DB
+var onceGormDB sync.Once
+var gormDB *gorm.DB
 
 type MultiDbConf struct {
 	Master  string // master db dsn
@@ -24,12 +24,12 @@ type MultiDbConf struct {
 }
 
 // connect to multiple DB sources (mysql only)
-func ConnMultiDB(conf[] MultiDbConf) *gorm.DB {
+func OpenDBConn(conf[] MultiDbConf) *gorm.DB {
 	if len(conf) == 0 {
 		logger.LogCritf("[Fatal Error]can not connect to DB: empty dsn given")
 	}
 
-	onceMultiDb.Do(func() {
+	onceGormDB.Do(func() {
 		enableSqlLog := os.Getenv("SQL_LOGGER_ENABLED")
 
 		gormConfig := &gorm.Config{}
@@ -90,29 +90,34 @@ func ConnMultiDB(conf[] MultiDbConf) *gorm.DB {
 		if err != nil {
 			logger.LogCritf("[Fatal Error]can not connect to DB: %v", err)
 		}
-		Connection = DB
+		gormDB = DB
 	})
 
-	return Connection
+	return gormDB
 }
 
 // close database connection
-func CloseMultiDB(dbConn *gorm.DB) {
+func CloseDBConn(dbConn *gorm.DB) {
 	gormDB, err := dbConn.DB()
 	if err != nil {
-		logger.LogErrorf("[Error]can not get DB: %v", err)
+		logger.LogErrorf("[Error]can not get gormDB: %v", err)
 	}
 
 	err = gormDB.Close()
 	if err != nil {
-		logger.LogErrorf("[Error]can not close DB: %v", err)
+		logger.LogErrorf("[Error]can not close gormDB: %v", err)
 	}
 }
 
-func GetInstance(connectionName string, isMaster bool) *gorm.DB {
+func GetInstance(DBName string, isMaster bool) *gorm.DB {
+	dbType := dbresolver.Read
+	appDebug := os.Getenv("APP_DEBUG")
 	if isMaster {
-		return Connection.Clauses(dbresolver.Use(connectionName), dbresolver.Write)
-	} else {
-		return Connection.Clauses(dbresolver.Use(connectionName), dbresolver.Read)
+		dbType = dbresolver.Write
 	}
+
+	if appDebug =="true" {
+		return gormDB.Clauses(dbresolver.Use(DBName), dbType).Debug()
+	}
+	return gormDB.Clauses(dbresolver.Use(DBName), dbType)
 }
