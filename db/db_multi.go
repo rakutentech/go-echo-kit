@@ -17,13 +17,22 @@ import (
 var onceGormDB sync.Once
 var gormDB *gorm.DB
 
+type ConnType int64
+
+// MultiDbConf represents for config for 1 master DB and several slave DB
 type MultiDbConf struct {
 	Master  string // master db dsn
 	Slaves  []string // slave db dsn array
 	DbName  string // db name
 }
 
-// connect to multiple DB sources (mysql only)
+// ConnTypeMaster ...
+const ConnTypeMaster ConnType = 1
+
+// ConnTypeSlave ...
+const ConnTypeSlave ConnType = 0
+
+// OpenDBConn connect to multiple DB sources (mysql only)
 func OpenDBConn(conf[] MultiDbConf) *gorm.DB {
 	if len(conf) == 0 {
 		logger.LogCritf("[Fatal Error]can not connect to DB: empty dsn given")
@@ -96,7 +105,7 @@ func OpenDBConn(conf[] MultiDbConf) *gorm.DB {
 	return gormDB
 }
 
-// close database connection
+// CloseDBConn close database connection
 func CloseDBConn(dbConn *gorm.DB) {
 	gormDB, err := dbConn.DB()
 	if err != nil {
@@ -109,15 +118,15 @@ func CloseDBConn(dbConn *gorm.DB) {
 	}
 }
 
-func GetInstance(DBName string, isMaster bool) *gorm.DB {
-	dbType := dbresolver.Read
+// GetConn get master or slave connection from DB i
+func GetConn(DBName string, connType ConnType) *gorm.DB {
 	appDebug := os.Getenv("APP_DEBUG")
-	if isMaster {
-		dbType = dbresolver.Write
+	operation := dbresolver.Read; if connType == ConnTypeMaster {
+		operation = dbresolver.Write
 	}
 
 	if appDebug =="true" {
-		return gormDB.Clauses(dbresolver.Use(DBName), dbType).Debug()
+		return gormDB.Clauses(dbresolver.Use(DBName), operation).Debug()
 	}
-	return gormDB.Clauses(dbresolver.Use(DBName), dbType)
+	return gormDB.Clauses(dbresolver.Use(DBName), operation)
 }

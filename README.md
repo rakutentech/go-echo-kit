@@ -96,7 +96,7 @@ defer db.CloseDBConn(dbConn)
 ```go
 import "github.com/rakutentech/go-echo-kit/db"
 
-query := db.GetInstance("db1", false).
+query := db.GetInstance("db1", db.ConnTypeSlave).
 		Select("user_id, name, email, created_at").
 		Table("user").
 		Limit(2)
