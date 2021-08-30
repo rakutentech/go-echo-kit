@@ -71,6 +71,37 @@ Check testdata/config.yaml to get more details
 | DB_MAX_IDLE_CONNS    | Maximum number of idle connection          | 2           |
 | DB_MAX_OPEN_CONNS    | Maximum number of open connection          | unlimited   |
 
+## Multiple DB connections (mysql only)
+### How to use it
+```go
+import "github.com/rakutentech/go-echo-kit/db"
+var dbConfig[] db.MultiDbConf
+
+db1Config := db.MultiDbConf {
+    Master: db1MasterDsn, // master db1 connection string
+    Slaves: db1SlaveDsns, // salve db1 connection strings
+    DbName: "db1",
+}
+db2Config := db.MultiDbConf {
+    Master: db2MasterDsn, // master db2 connection string
+    Slaves: db2SlaveDsns, // slave db2 connection strings
+    DbName: "db2",
+}
+
+dbConfig = append(dbConfig, db1Config, db2Config)
+dbConn = db.OpenDBConn(dbConfig)
+
+defer db.CloseDBConn(dbConn)
+```
+```go
+import "github.com/rakutentech/go-echo-kit/db"
+
+query := db.GetInstance("db1", db.ConnTypeSlave).
+		Select("user_id, name, email, created_at").
+		Table("user").
+		Limit(2)
+```
+
 ## Configuration
 ### How to use it
 Configuration can be started like below
