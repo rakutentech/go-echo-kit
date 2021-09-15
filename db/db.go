@@ -21,7 +21,7 @@ var (
 
 const (
 	defaultDriver          = "mysql"
-	defaultConnMaxLifetime = 0
+	defaultConnMaxLifetime = 0 // max connection life time in seconds
 	defaultMaxIdleConns    = 2
 	defaultMaxOpenConns    = 0
 )
@@ -46,20 +46,27 @@ func New() *Manager {
 }
 
 func setUpManager() *Manager {
+	var maxLife int64
+	var maxIdleConn int
+	var maxOpenConn int
+	var err error
+
 	driver := os.Getenv("DB_DRIVER")
 	if len(driver) == 0 {
 		driver = defaultDriver
 	}
 
-	maxLife, err := strconv.ParseInt(os.Getenv("DB_CONN_MAX_LIFETIME"), 10, 64)
-	if err != nil {
-		panic(err)
+	envMaxLife := os.Getenv("DB_CONN_MAX_LIFETIME")
+	if len(envMaxLife) == 0 {
+		maxLife = defaultConnMaxLifetime
+	} else {
+		maxLife, err = strconv.ParseInt(envMaxLife, 10, 64)
+		if err != nil {
+			panic(err)
+		}
 	}
-	maxLife = defaultConnMaxLifetime
-	var maxIdleConn int
-	var maxOpenConn int
 
-	var envMaxIdleConn = os.Getenv("DB_MAX_IDLE_CONNS")
+	envMaxIdleConn := os.Getenv("DB_MAX_IDLE_CONNS")
 	if len(envMaxIdleConn) == 0 {
 		maxIdleConn = defaultMaxIdleConns
 	} else {
@@ -69,7 +76,7 @@ func setUpManager() *Manager {
 		}
 	}
 
-	var envMaxOpenConn = os.Getenv("DB_MAX_OPEN_CONNS")
+	envMaxOpenConn := os.Getenv("DB_MAX_OPEN_CONNS")
 	if len(envMaxOpenConn) == 0 {
 		maxOpenConn = defaultMaxOpenConns
 	} else {
