@@ -39,7 +39,6 @@ const (
 	defaultConnMaxLifetime        = 0 // max connection life time in seconds
 	defaultMaxIdleConns           = 2
 	defaultMaxOpenConns           = 0
-	defaultLogLevel               = 1 // silent
 )
 
 // Manager ...
@@ -67,7 +66,6 @@ func setUpManager() *Manager {
 	var maxIdleConn int
 	var maxOpenConn int
 	var err error
-	var logLevel logger.LogLevel
 
 	driverStr := os.Getenv("DB_DRIVER")
 	var driver Driver
@@ -107,23 +105,11 @@ func setUpManager() *Manager {
 		}
 	}
 
-	envLogLevel := os.Getenv("DB_LOG_LEVEL")
-	if len(envLogLevel) == 0 {
-		logLevel = defaultLogLevel
-	} else {
-		logLevelInt, err := strconv.Atoi(envLogLevel)
-		if err != nil {
-			panic(err)
-		}
-		logLevel = logger.LogLevel(logLevelInt)
-	}
-
 	return &Manager{
 		Driver:          driver,
 		ConnMaxLifetime: time.Second * time.Duration(maxLife),
 		MaxIdleConns:    maxIdleConn,
 		MaxOpenConns:    maxOpenConn,
-		LogLevel:        logLevel,
 	}
 }
 
@@ -143,49 +129,49 @@ func (m *Manager) AddConnStrings(connString []string) {
 }
 
 // Open will create DB instances
-func (m *Manager) Open() *Manager {
+func (m *Manager) Open(opt ...gorm.Option) *Manager {
 	if len(connStrings) == 0 {
 		panic("There is no connect string for DB. Please add them using AddConnString method")
 	}
-	m.Master = m.open(connStrings[0])
+	m.Master = m.open(connStrings[0], opt...)
 	m.Slaves = make([]*gorm.DB, len(connStrings[1:]))
 	for i, connString := range connStrings[1:] {
-		m.Slaves[i] = m.open(connString)
+		m.Slaves[i] = m.open(connString, opt...)
 	}
 	return m
 }
 
 // OpenAdmin will create admin instance
-func (m *Manager) OpenAdmin() *Manager {
+func (m *Manager) OpenAdmin(opt ...gorm.Option) *Manager {
 	if adminConnString == "" {
 		panic("There is no admin connect string for DB. Please add them using AddAdminConnString method")
 	}
-	m.Admin = m.open(adminConnString)
+	m.Admin = m.open(adminConnString, opt...)
 	return m
 }
 
 // OpenMaster will create master instance
-func (m *Manager) OpenMaster() *Manager {
+func (m *Manager) OpenMaster(opt ...gorm.Option) *Manager {
 	if len(connStrings) == 0 {
 		panic("There is no connect string for DB. Please add them using AddConnString method")
 	}
-	m.Master = m.open(connStrings[0])
+	m.Master = m.open(connStrings[0], opt...)
 	return m
 }
 
 // OpenSlaves will create slave instances
-func (m *Manager) OpenSlaves() *Manager {
+func (m *Manager) OpenSlaves(opt ...gorm.Option) *Manager {
 	if len(connStrings) == 0 {
 		panic("There is no connect string for DB. Please add them using AddConnString method")
 	}
 	m.Slaves = make([]*gorm.DB, len(connStrings))
 	for i, connString := range connStrings {
-		m.Slaves[i] = m.open(connString)
+		m.Slaves[i] = m.open(connString, opt...)
 	}
 	return m
 }
 
-func (m *Manager) open(connectString string) *gorm.DB {
+func (m *Manager) open(connectString string, opt ...gorm.Option) *gorm.DB {
 	var dialector gorm.Dialector
 
 	switch m.Driver {
@@ -200,9 +186,7 @@ func (m *Manager) open(connectString string) *gorm.DB {
 	default:
 		panic(fmt.Sprintf("invalid driver detected %s", m.Driver))
 	}
-	instance, err := gorm.Open(dialector, &gorm.Config{
-		Logger: logger.Default.LogMode(m.LogLevel),
-	})
+	instance, err := gorm.Open(dialector, opt...)
 	if err != nil {
 		panic(err)
 	}
@@ -220,6 +204,12 @@ func (m *Manager) open(connectString string) *gorm.DB {
 func (m *Manager) Close() {
 	m.CloseMaster()
 	m.CloseSlaves()
+}
+
+// CloseMaster will release all master instance
+func (m *Manager) CloseAdmin() {
+	db, _ := m.Admin.DB()
+	db.Close()
 }
 
 // CloseMaster will release all master instance

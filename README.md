@@ -70,9 +70,6 @@ Check testdata/config.yaml to get more details
 | DB_CONN_MAX_LIFETIME | Maximum connection life time(seconds)      | unlimited   |
 | DB_MAX_IDLE_CONNS    | Maximum number of idle connection          | 2           |
 | DB_MAX_OPEN_CONNS    | Maximum number of open connection          | unlimited   |
-| DB_LOG_LEVEL         | Log level for gorm logging                 | 1(silent)   |
-
-You can refer to [source code](https://github.com/go-gorm/gorm/blob/af3fbdc2fcfface01ce2a0795ee0fac3997ddc8e/logger/logger.go#L37) to learn more about log levels.
 
 ## Multiple DB connections (mysql only)
 ### How to use it
