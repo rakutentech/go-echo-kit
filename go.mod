@@ -1,4 +1,4 @@
-module github.com/rakutentech/go-echo-kit
+module github.com/rakutentech/go-echo-kit/v2
 
 go 1.15
 
