@@ -6,7 +6,7 @@
 Go Echo Kit provides useful tools for go-echo development.
 
 1. Configuration with [Viper](https://github.com/spf13/viper)
-2. DB connector with [Gorm](https://gorm.io/gorm)
+2. DB connector with [Gorm](https://github.com/jinzhu/gorm)
 3. Logger
 4. Messages with [i18n](https://github.com/nicksnyder/go-i18n)
 
@@ -48,7 +48,7 @@ connStr := builder.
   SetHost("YourHost").
   SetUsername("YourUsername").
   SetPort("YourPort").
-  SetPassword("YourPassword").
+  SetPassword("YourPwd").
   SetOptions(optionMap)
   Build()
 ```
@@ -70,9 +70,6 @@ Check testdata/config.yaml to get more details
 | DB_CONN_MAX_LIFETIME | Maximum connection life time(seconds)      | unlimited   |
 | DB_MAX_IDLE_CONNS    | Maximum number of idle connection          | 2           |
 | DB_MAX_OPEN_CONNS    | Maximum number of open connection          | unlimited   |
-| DB_LOG_LEVEL         | Log level for gorm logging                 | 1(silent)   |
-
-You can refer to [source code](https://github.com/go-gorm/gorm/blob/af3fbdc2fcfface01ce2a0795ee0fac3997ddc8e/logger/logger.go#L37) to learn more about log levels.
 
 ## Multiple DB connections (mysql only)
 ### How to use it

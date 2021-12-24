@@ -1,21 +1,15 @@
 package db
 
 import (
-	"fmt"
 	"math/rand"
 	"os"
 	"strconv"
 	"sync"
 	"time"
 
-	"gorm.io/driver/mysql"     // gorm driver
-	"gorm.io/driver/postgres"  // gorm driver
-	"gorm.io/driver/sqlite"    // gorm driver
-	"gorm.io/driver/sqlserver" // gorm driver
-
-	// gorm driver
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"  // gorm driver
+	_ "github.com/jinzhu/gorm/dialects/sqlite" // gorm driver
 )
 
 var (
@@ -25,33 +19,22 @@ var (
 	adminConnString string
 )
 
-type Driver string
-
 const (
-	driverMySQL     Driver = "mysql"
-	driverSQLServer Driver = "mssql"
-	driverPostgres  Driver = "postgres"
-	driverSQLLite   Driver = "sqllite"
-)
-
-const (
-	defaultDriver          Driver = driverMySQL
-	defaultConnMaxLifetime        = 0 // max connection life time in seconds
-	defaultMaxIdleConns           = 2
-	defaultMaxOpenConns           = 0
-	defaultLogLevel               = 1 // silent
+	defaultDriver          = "mysql"
+	defaultConnMaxLifetime = 0 // max connection life time in seconds
+	defaultMaxIdleConns    = 2
+	defaultMaxOpenConns    = 0
 )
 
 // Manager ...
 type Manager struct {
-	Driver          Driver
+	Driver          string
 	ConnMaxLifetime time.Duration
 	MaxIdleConns    int
 	MaxOpenConns    int
 	Admin           *gorm.DB
 	Master          *gorm.DB
 	Slaves          []*gorm.DB
-	LogLevel        logger.LogLevel
 }
 
 // New returns singleton instance of DB manager
@@ -67,14 +50,10 @@ func setUpManager() *Manager {
 	var maxIdleConn int
 	var maxOpenConn int
 	var err error
-	var logLevel logger.LogLevel
 
-	driverStr := os.Getenv("DB_DRIVER")
-	var driver Driver
-	if len(driverStr) == 0 {
+	driver := os.Getenv("DB_DRIVER")
+	if len(driver) == 0 {
 		driver = defaultDriver
-	} else {
-		driver = Driver(driverStr)
 	}
 
 	envMaxLife := os.Getenv("DB_CONN_MAX_LIFETIME")
@@ -107,23 +86,11 @@ func setUpManager() *Manager {
 		}
 	}
 
-	envLogLevel := os.Getenv("DB_LOG_LEVEL")
-	if len(envLogLevel) == 0 {
-		logLevel = defaultLogLevel
-	} else {
-		logLevelInt, err := strconv.Atoi(envLogLevel)
-		if err != nil {
-			panic(err)
-		}
-		logLevel = logger.LogLevel(logLevelInt)
-	}
-
 	return &Manager{
 		Driver:          driver,
 		ConnMaxLifetime: time.Second * time.Duration(maxLife),
 		MaxIdleConns:    maxIdleConn,
 		MaxOpenConns:    maxOpenConn,
-		LogLevel:        logLevel,
 	}
 }
 
@@ -137,7 +104,7 @@ func (m *Manager) AddConnString(connString string) {
 	connStrings = append(connStrings, connString)
 }
 
-// AddConnStrings can add multiple connect strings. First string will be the master
+// AddConnStrings can add mulitple connect strings. First string will be the master
 func (m *Manager) AddConnStrings(connString []string) {
 	connStrings = append(connStrings, connString...)
 }
@@ -186,63 +153,57 @@ func (m *Manager) OpenSlaves() *Manager {
 }
 
 func (m *Manager) open(connectString string) *gorm.DB {
-	var dialector gorm.Dialector
-
-	switch m.Driver {
-	case driverMySQL:
-		dialector = mysql.Open(connectString)
-	case driverSQLLite:
-		dialector = sqlite.Open(connectString)
-	case driverPostgres:
-		dialector = postgres.Open(connectString)
-	case driverSQLServer:
-		dialector = sqlserver.Open(connectString)
-	default:
-		panic(fmt.Sprintf("invalid driver detected %s", m.Driver))
-	}
-	instance, err := gorm.Open(dialector, &gorm.Config{
-		Logger: logger.Default.LogMode(m.LogLevel),
-	})
+	instance, err := gorm.Open(m.Driver, connectString)
 	if err != nil {
 		panic(err)
 	}
-	db, err := instance.DB()
-	if err != nil {
-		panic(err)
-	}
-	db.SetConnMaxLifetime(m.ConnMaxLifetime)
-	db.SetMaxIdleConns(m.MaxIdleConns)
-	db.SetMaxOpenConns(m.MaxOpenConns)
+	instance.DB().SetConnMaxLifetime(m.ConnMaxLifetime)
+	instance.DB().SetMaxIdleConns(m.MaxIdleConns)
+	instance.DB().SetMaxOpenConns(m.MaxOpenConns)
 	return instance
+}
+
+// SetLogMode will change SQL log mode (default: false)
+func (m *Manager) SetLogMode(logMode bool) {
+	m.Master.LogMode(logMode)
+	for _, slv := range m.Slaves {
+		slv.LogMode(logMode)
+	}
 }
 
 // Close will release all DB instances
 func (m *Manager) Close() {
-	m.CloseMaster()
-	m.CloseSlaves()
+	m.Master.Close()
+	for _, slv := range m.Slaves {
+		slv.Close()
+	}
 }
 
 // CloseMaster will release all master instance
 func (m *Manager) CloseMaster() {
-	db, _ := m.Master.DB()
-	db.Close()
+	m.Master.Close()
 }
 
 // CloseSlaves will release all slave instances
 func (m *Manager) CloseSlaves() {
 	for _, slv := range m.Slaves {
-		db, _ := slv.DB()
-		db.Close()
+		slv.Close()
 	}
 }
 
 // AdminConn will return admin connection
 func (m *Manager) AdminConn() *gorm.DB {
+	if err := m.Admin.DB().Ping(); err != nil {
+		panic(err)
+	}
 	return m.Admin
 }
 
 // MasterConn will return master connection
 func (m *Manager) MasterConn() *gorm.DB {
+	if err := m.Master.DB().Ping(); err != nil {
+		panic(err)
+	}
 	return m.Master
 }
 
@@ -251,7 +212,8 @@ func (m *Manager) SlaveConn() *gorm.DB {
 	rand.Shuffle(len(m.Slaves), func(i, j int) { m.Slaves[i], m.Slaves[j] = m.Slaves[j], m.Slaves[i] })
 
 	for _, slv := range m.Slaves {
-		if _, err := slv.DB(); err == nil {
+
+		if err := slv.DB().Ping(); err == nil {
 			return slv
 		}
 	}
