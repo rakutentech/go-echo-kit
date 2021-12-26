@@ -13,7 +13,7 @@ Go Echo Kit provides useful tools for go-echo development.
 ## Installation
 ### go get
 ```bash
-go get -u github.com/rakutentech/go-echo-kit
+go get -u github.com/rakutentech/go-echo-kit/v2
 ```
 
 ## Database
@@ -21,7 +21,7 @@ go get -u github.com/rakutentech/go-echo-kit
 #### DB manager
 DB can be started like below
 ```go
-import "github.com/rakutentech/go-echo-kit/db"
+import "github.com/rakutentech/go-echo-kit/v2/db"
 
 m := db.New()
 m.AddConnString(connectStringMaster) // Add single connect string
@@ -40,7 +40,7 @@ Regarding DB queries and how to generate connect string, please refer to [GORM g
 #### ConnectStringBuilder
 This package also provides useful tool to build connection strings
 ```go
-import "github.com/rakutentech/go-echo-kit/db"
+import "github.com/rakutentech/go-echo-kit/v2/db"
 
 builder := db.ConnStringBuilder{}
 connStr := builder.
@@ -55,7 +55,7 @@ connStr := builder.
 There is one more option to build string from config
 
 ```go
-import "github.com/rakutentech/go-echo-kit/config"
+import "github.com/rakutentech/go-echo-kit/v2/config"
 
 cfg := config.New()
 connStr := builder.SetWithConfig(cfg.Sub("databases.master")).Build())
@@ -74,7 +74,7 @@ Check testdata/config.yaml to get more details
 ## Multiple DB connections (mysql only)
 ### How to use it
 ```go
-import "github.com/rakutentech/go-echo-kit/db"
+import "github.com/rakutentech/go-echo-kit/v2/db"
 var dbConfig[] db.MultiDbConf
 
 db1Config := db.MultiDbConf {
@@ -94,7 +94,7 @@ dbConn = db.OpenDBConn(dbConfig)
 defer db.CloseDBConn(dbConn)
 ```
 ```go
-import "github.com/rakutentech/go-echo-kit/db"
+import "github.com/rakutentech/go-echo-kit/v2/db"
 
 query := db.GetInstance("db1", db.ConnTypeSlave).
 		Select("user_id, name, email, created_at").
@@ -106,7 +106,7 @@ query := db.GetInstance("db1", db.ConnTypeSlave).
 ### How to use it
 Configuration can be started like below
 ```go
-import "github.com/rakutentech/go-echo-kit/config"
+import "github.com/rakutentech/go-echo-kit/v2/config"
 
 cfg := config.New()
 secret := cfg.GetString("app.secret")
@@ -132,7 +132,7 @@ DB_PORT=4306
 ### How to use it
 Logger can be started like below
 ```go
-import "github.com/rakutentech/go-echo-kit/logger"
+import "github.com/rakutentech/go-echo-kit/v2/logger"
 
 logger.SetLogFile(filepath) // for simple use
 logger.Notice("Your notice")
