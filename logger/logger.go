@@ -12,7 +12,7 @@ import (
 )
 
 func isDebugMode() bool {
-	env := strings.ToLower(os.Getenv("APP_DEBUG"))
+	env := strings.ToLower(os.Getenv("APP_ENV"))
 	if env != "prod" {
 		return true
 	}
