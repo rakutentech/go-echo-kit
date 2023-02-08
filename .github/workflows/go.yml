@@ -3,7 +3,7 @@ name: go-echo-kit
 on: push
 
 jobs:
-  build-13:
+  build-17:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -11,14 +11,14 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.13
+        go-version: 1.17
 
     - name: Build
       run: go build -v ./...
 
     - name: Test
       run: go test -v ./...
-  build-14:
+  build-18:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -26,14 +26,14 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.14
+        go-version: 1.18
 
     - name: Build
       run: go build -v ./...
 
     - name: Test
       run: go test -v ./...
-  build-15:
+  build-19:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -41,7 +41,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.15
+        go-version: 1.19
 
     - name: Build
       run: go build -v ./...
