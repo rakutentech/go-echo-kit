@@ -13,7 +13,7 @@ Go Echo Kit provides useful tools for go-echo development.
 ## Installation
 ### go get
 ```bash
-go get -u github.com/rakutentech/go-echo-kit
+go install github.com/rakutentech/go-echo-kit
 ```
 
 ## Database
