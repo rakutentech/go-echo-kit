@@ -193,29 +193,18 @@ func (m *Manager) CloseSlaves() {
 
 // AdminConn will return admin connection
 func (m *Manager) AdminConn() *gorm.DB {
-	if err := m.Admin.DB().Ping(); err != nil {
-		panic(err)
-	}
 	return m.Admin
 }
 
 // MasterConn will return master connection
 func (m *Manager) MasterConn() *gorm.DB {
-	if err := m.Master.DB().Ping(); err != nil {
-		panic(err)
-	}
 	return m.Master
 }
 
 // SlaveConn will return one of slave connection or master if all slave failed
 func (m *Manager) SlaveConn() *gorm.DB {
-	rand.Shuffle(len(m.Slaves), func(i, j int) { m.Slaves[i], m.Slaves[j] = m.Slaves[j], m.Slaves[i] })
-
-	for _, slv := range m.Slaves {
-
-		if err := slv.DB().Ping(); err == nil {
-			return slv
-		}
+	if l := len(m.Slaves); l > 0 {
+		return m.Slaves[rand.Intn(l)]
 	}
 
 	return m.MasterConn()
