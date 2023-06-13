@@ -203,13 +203,8 @@ func (m *Manager) MasterConn() *gorm.DB {
 
 // SlaveConn will return one of slave connection or master if all slave failed
 func (m *Manager) SlaveConn() *gorm.DB {
-	if len(m.Slaves) > 0 {
-		slaves := make([]*gorm.DB, 0, len(m.Slaves))
-		for _, s := range m.Slaves {
-			slaves = append(slaves, s)
-		}
-		rand.Shuffle(len(slaves), func(i, j int) { slaves[i], slaves[j] = slaves[j], slaves[i] })
-		return slaves[0]
+	if l := len(m.Slaves); l > 0 {
+		return m.Slaves[rand.Intn(l)]
 	}
 
 	return m.MasterConn()
